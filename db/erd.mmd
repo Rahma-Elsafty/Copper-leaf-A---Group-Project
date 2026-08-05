@@ -1,0 +1,80 @@
+erDiagram
+    LOCATIONS ||--o{ STAFF : employs
+    LOCATIONS ||--o{ MENU_ITEMS : serves
+    LOCATIONS ||--o{ INVENTORY_STOCK : stocks
+    LOCATIONS ||--o{ FOOD_SAFETY_INCIDENTS : reports
+
+    MENU_ITEMS ||--o{ RECIPE_INGREDIENTS : uses
+    INGREDIENTS ||--o{ RECIPE_INGREDIENTS : used_in
+    INGREDIENTS ||--o{ INVENTORY_STOCK : tracked_as
+    INGREDIENTS ||--o{ PURCHASE_ORDERS : ordered_as
+
+    SUPPLIERS ||--o{ PURCHASE_ORDERS : fulfills
+    STAFF ||--o{ PURCHASE_ORDERS : requests
+    STAFF ||--o{ FOOD_SAFETY_INCIDENTS : opens
+
+    LOCATIONS {
+        int location_id PK
+        string name
+        string region
+        float monthly_budget
+    }
+    STAFF {
+        int staff_id PK
+        string name
+        string role
+        int location_id FK
+    }
+    MENU_ITEMS {
+        int item_id PK
+        string name
+        int location_id FK
+        float price
+    }
+    INGREDIENTS {
+        int ingredient_id PK
+        string name
+        string allergen_tags
+    }
+    RECIPE_INGREDIENTS {
+        int item_id FK
+        int ingredient_id FK
+        float quantity
+    }
+    INVENTORY_STOCK {
+        int stock_id PK
+        int ingredient_id FK
+        int location_id FK
+        float qty_on_hand
+        float reorder_threshold
+    }
+    SUPPLIERS {
+        int supplier_id PK
+        string name
+        bool verified
+        string contact
+    }
+    PURCHASE_ORDERS {
+        int po_id PK
+        int ingredient_id FK
+        int supplier_id FK
+        float qty
+        float cost
+        string status
+        int requested_by FK
+        string created_at
+    }
+    FOOD_SAFETY_INCIDENTS {
+        int incident_id PK
+        int location_id FK
+        string type
+        int opened_by FK
+        string status
+        string summary
+        string created_at
+    }
+    SAFETY_POLICIES {
+        int policy_id PK
+        string title
+        string doc_text
+    }
