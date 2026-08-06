@@ -3,6 +3,24 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, ConfigDict
 
+class AgentStep(BaseModel):
+    thought: str
+
+    action: Literal[
+        "call_tool",
+        "respond",
+        "replan"
+    ]
+
+    action_input: Optional[dict] = None
+
+    final_answer: Optional[str] = None
+
+    plan_updated: bool
+
+    new_plan: Optional[str] = None
+
+    next_subgoal: Optional[str] = None
 
 class MemoryItem(BaseModel):
     """
