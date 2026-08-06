@@ -1,0 +1,14 @@
+{
+    "messages": [
+        {
+            "role": "user",
+            "content": "hi"
+        }
+    ],
+    "scratchpad": {
+        "plan": null,
+        "current_subgoal": null,
+        "reasoning": null,
+        "variables": {}
+    }
+}
