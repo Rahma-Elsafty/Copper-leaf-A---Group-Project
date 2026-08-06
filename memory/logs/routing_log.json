@@ -1,1 +1,132 @@
-
+[
+    {
+        "message": "I am allergic to peanuts.",
+        "role": "user",
+        "timestamp": "2026-08-06T02:45:02.111787",
+        "decision": "episodic",
+        "reasoning": "Medical allergy information that may be relevant for future conversations and safety decisions.",
+        "importance_score": 0.9,
+        "category": "medical",
+        "event_summary": "User is allergic to peanuts."
+    },
+    {
+        "message": "Hello! How are you?",
+        "role": "user",
+        "timestamp": "2026-08-06T03:51:23.673688",
+        "decision": "forget",
+        "reasoning": "This is a casual greeting with no future value.",
+        "importance_score": 0.1,
+        "category": "other",
+        "event_summary": "User sent a friendly greeting."
+    },
+    {
+        "message": "I prefer vegetarian meals.",
+        "role": "user",
+        "timestamp": "2026-08-06T03:51:31.274845",
+        "decision": "episodic",
+        "reasoning": "The user has stated a clear personal preference for vegetarian meals which is likely to be relevant for future meal planning or food-related requests.",
+        "importance_score": 0.8,
+        "category": "preference",
+        "event_summary": "User prefers vegetarian meals."
+    },
+    {
+        "message": "I am allergic to peanuts.",
+        "role": "user",
+        "timestamp": "2026-08-06T03:51:35.798695",
+        "decision": "episodic",
+        "reasoning": "The message contains medical information about a peanut allergy that could be relevant in future conversations.",
+        "importance_score": 0.9,
+        "category": "medical",
+        "event_summary": "User is allergic to peanuts."
+    },
+    {
+        "message": "My birthday is September 12.",
+        "role": "user",
+        "timestamp": "2026-08-06T03:51:39.590287",
+        "decision": "episodic",
+        "reasoning": "The message contains a personal fact about the user's birthday that may be relevant for future conversations.",
+        "importance_score": 0.8,
+        "category": "personal",
+        "event_summary": "User's birthday is September 12."
+    },
+    {
+        "message": "My email is sara@example.com.",
+        "role": "user",
+        "timestamp": "2026-08-06T03:51:42.371176",
+        "decision": "episodic",
+        "reasoning": "The message contains the user's email address, which is a piece of personal contact information that could be useful in future conversations.",
+        "importance_score": 0.85,
+        "category": "personal",
+        "event_summary": "User provided their email address: sara@example.com."
+    },
+    {
+        "message": "The project deadline is next Friday.",
+        "role": "user",
+        "timestamp": "2026-08-06T03:51:48.517601",
+        "decision": "episodic",
+        "reasoning": "The message states an important project deadline that is relevant for future reference.",
+        "importance_score": 0.9,
+        "category": "task",
+        "event_summary": "Project deadline is next Friday."
+    },
+    {
+        "message": "The freezer temperature exceeded the safe limit.",
+        "role": "user",
+        "timestamp": "2026-08-06T03:51:50.982066",
+        "decision": "episodic",
+        "reasoning": "This reports a food safety incident that could impact future operations or audits.",
+        "importance_score": 0.9,
+        "category": "other",
+        "event_summary": "Freezer temperature exceeded safe limits."
+    },
+    {
+        "message": "Supplier FreshFoods delivered expired milk.",
+        "role": "user",
+        "timestamp": "2026-08-06T03:52:03.297893",
+        "decision": "episodic",
+        "reasoning": "Supplier delivered expired milk, which indicates a supplier issue and potential food safety concern that should be remembered for future conversations.",
+        "importance_score": 0.8,
+        "category": "other",
+        "event_summary": "FreshFoods supplier delivered expired milk."
+    },
+    {
+        "message": "The kitchen has only two kilograms of flour left.",
+        "role": "user",
+        "timestamp": "2026-08-06T03:52:08.243805",
+        "decision": "episodic",
+        "reasoning": "Notifying about a low flour inventory is operationally relevant for future restocking or planning.",
+        "importance_score": 0.75,
+        "category": "other",
+        "event_summary": "Kitchen flour inventory is low with only two kilograms remaining."
+    },
+    {
+        "message": "Thank you so much!",
+        "role": "user",
+        "timestamp": "2026-08-06T03:52:11.765312",
+        "decision": "forget",
+        "reasoning": "A simple thank you is casual conversation with no future value.",
+        "importance_score": 0.1,
+        "category": "other",
+        "event_summary": "User expressed gratitude."
+    },
+    {
+        "message": "Can you tell me the weather today?",
+        "role": "user",
+        "timestamp": "2026-08-06T03:52:16.126290",
+        "decision": "forget",
+        "reasoning": "Weather inquiry is a temporary request with no lasting personal or operational significance.",
+        "importance_score": 0.1,
+        "category": "other",
+        "event_summary": "User asked about the weather today."
+    },
+    {
+        "message": "Please remember that I always order gluten-free meals.",
+        "role": "user",
+        "timestamp": "2026-08-06T03:52:20.752763",
+        "decision": "episodic",
+        "reasoning": "The message contains a personal dietary preference that is relevant for future meal ordering decisions.",
+        "importance_score": 0.9,
+        "category": "preference",
+        "event_summary": "User always orders gluten-free meals."
+    }
+]
