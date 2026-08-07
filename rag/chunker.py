@@ -18,7 +18,7 @@ class DocumentChunker:
             chunk_overlap=chunk_overlap,
         )
 
-    def split(self, documents: list[Document]) -> list[Document]:
+    def split_documents(self, documents: list[Document]) -> list[Document]:
         """
         Split documents into smaller chunks.
         """
