@@ -16,7 +16,14 @@ class DocumentLoader:
     def __init__(self, data_dir: str = "data"):
         self.data_dir = Path(data_dir)
 
+
     def load(self) -> list[Document]:
+
+        if not self.data_dir.exists():
+            raise FileNotFoundError(
+                f"Directory '{self.data_dir}' does not exist."
+            )
+
         documents: list[Document] = []
 
         # Load PDF files
