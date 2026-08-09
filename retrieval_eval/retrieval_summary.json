@@ -1,0 +1,32 @@
+{
+  "Naive RAG": {
+    "answer_accuracy": 0.9166666666666666,
+    "retrieval_accuracy": 1.0,
+    "answer_correct": 11,
+    "retrieval_correct": 12,
+    "total": 12,
+    "avg_input_tokens": 7.666666666666667,
+    "avg_output_tokens": 47.0,
+    "avg_latency": 8.710163958322179
+  },
+  "Hybrid Search": {
+    "answer_accuracy": 0.9166666666666666,
+    "retrieval_accuracy": 1.0,
+    "answer_correct": 11,
+    "retrieval_correct": 12,
+    "total": 12,
+    "avg_input_tokens": 7.666666666666667,
+    "avg_output_tokens": 38.583333333333336,
+    "avg_latency": 8.14276161666688
+  },
+  "Agentic RAG": {
+    "answer_accuracy": 0.9166666666666666,
+    "retrieval_accuracy": 1.0,
+    "answer_correct": 11,
+    "retrieval_correct": 12,
+    "total": 12,
+    "avg_input_tokens": 7.666666666666667,
+    "avg_output_tokens": 42.75,
+    "avg_latency": 15.178694333337868
+  }
+}
