@@ -4,19 +4,18 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
 from .vector_store import DocumentVectorStore
+from .Self_Rag import SelfRAGVerifier
+
 
 load_dotenv()
-
 
 MODEL = "poolside/laguna-s-2.1:free"
 
 
 class NaiveRAG:
     """
-    Basic Retrieval-Augmented Generation pipeline.
-
-    Retrieves relevant documents from the vector store
-    and generates an answer using an LLM.
+    Basic Retrieval-Augmented Generation pipeline
+    with Self-RAG verification.
     """
 
     def __init__(
@@ -26,6 +25,9 @@ class NaiveRAG:
     ):
         self.vector_store = vector_store
         self.llm = llm
+
+        # Self-RAG verifier
+        self.verifier = SelfRAGVerifier(llm)
 
     def retrieve(
         self,
@@ -48,9 +50,11 @@ class NaiveRAG:
         top_k: int = 3,
     ):
         """
-        Retrieve relevant documents and generate
-        an answer based on their content.
+        Retrieve documents, verify their relevance,
+        generate an answer, and verify groundedness.
         """
+
+        print("\n[Naive RAG] Retrieving documents...")
 
         results = self.retrieve(
             query=query,
@@ -68,11 +72,40 @@ class NaiveRAG:
             for doc in results
         )
 
+        # -----------------------------------------
+        # Self-RAG: [IS_RELEVANT]
+        # -----------------------------------------
+
+        print("\n[Self-RAG] Checking retrieval relevance...")
+
+        relevant = self.verifier.verify_relevance(
+            query=query,
+            retrieved_chunks=context,
+        )
+
+        if not relevant:
+            print(
+                "[Self-RAG] Retrieved context is not relevant."
+            )
+
+            return (
+                "I do not have enough relevant information "
+                "in the retrieved documents to answer this question.",
+                results,
+            )
+
+        # -----------------------------------------
+        # Generate answer
+        # -----------------------------------------
+
         prompt = f"""
-Answer the user query strictly based on the provided context.
+Answer the user query strictly based on the
+provided context.
 
 If the context does not contain enough information,
 say that you do not have enough information.
+
+Do not use outside knowledge.
 
 Context:
 {context}
@@ -81,9 +114,80 @@ Query:
 {query}
 """
 
+        print("\n[Naive RAG] Generating answer...")
+
         response = self.llm.invoke(prompt)
 
-        return response.content, results
+        answer = response.content
+
+        # -----------------------------------------
+        # Self-RAG: [IS_SUPPORTED]
+        # -----------------------------------------
+
+        print("\n[Self-RAG] Checking answer groundedness...")
+
+        grounded = self.verifier.verify_groundedness(
+            generated_answer=answer,
+            retrieved_chunks=context,
+        )
+
+        if grounded:
+            print("[Self-RAG] Answer is grounded.")
+
+            return answer, results
+
+        # -----------------------------------------
+        # Regenerate if not grounded
+        # -----------------------------------------
+
+        print(
+            "[Self-RAG] Answer was not grounded."
+        )
+        print(
+            "[Self-RAG] Regenerating with stricter instructions..."
+        )
+
+        retry_prompt = f"""
+Answer the question using ONLY facts explicitly
+contained in the context.
+
+Every claim in your answer must be supported
+by the context.
+
+If the context does not provide enough information,
+say:
+
+"I do not have enough information to answer this."
+
+Do not use outside knowledge.
+
+Context:
+{context}
+
+Question:
+{query}
+"""
+
+        retry_response = self.llm.invoke(
+            retry_prompt
+        )
+
+        retry_answer = retry_response.content
+
+        # Verify the regenerated answer
+        retry_grounded = self.verifier.verify_groundedness(
+            generated_answer=retry_answer,
+            retrieved_chunks=context,
+        )
+
+        if retry_grounded:
+            return retry_answer, results
+
+        return (
+            "I do not have enough information in the "
+            "retrieved documents to provide a reliable answer.",
+            results,
+        )
 
 
 def main():
@@ -111,7 +215,10 @@ def main():
         llm=llm,
     )
 
-    query = "What does the company policy say about vacation?"
+    # Get query from user
+    query = input(
+        "\nEnter your question: "
+    )
 
     response, results = rag.retrieve_and_generate(
         query=query,
@@ -119,7 +226,7 @@ def main():
     )
 
     print("\n" + "=" * 60)
-    print("ANSWER")
+    print("FINAL ANSWER")
     print("=" * 60)
     print(response)
 
