@@ -1,91 +1,40 @@
-from episodic_memory import EpisodicMemory
-from semantic_memory import SemanticMemory
-
+import datetime
 
 class MemoryConsolidation:
-    """
-    Transfers useful information from Episodic Memory
-    to Semantic Memory.
-    """
+    def __init__(self, episodic_store, semantic_store):
+        self.episodic = episodic_store
+        self.semantic = semantic_store
 
-    def __init__(self, episodic_memory, semantic_memory):
+    def run_consolidation_pass(self):
+        """عملية دورية تقرأ الـ Episodic وتستخرج/تحدث الـ Semantic Facts"""
+        unconsolidated_episodes = self.episodic.get_unconsolidated()
 
-        self.episodic = episodic_memory
-        self.semantic = semantic_memory
-
-    def consolidate(self):
-        """
-        Read every episode and extract facts.
-        """
-
-        episodes = self.episodic.get_all()
-
-        for episode in episodes:
-
-            self.extract_fact(episode)
-
-    def extract_fact(self, episode):
-
-        event = episode["event"].lower()
-
-        user = episode["user_id"]
-
-        # Favorite language
-
-        if "likes python" in event:
-            self.semantic.add_fact(
-                user,
-                "favorite_language",
-                "Python"
-            )
-
-        elif "likes java" in event:
-            self.semantic.add_fact(
-                user,
-                "favorite_language",
-                "Java"
-            )
-
-        # Company
-
-        elif "works at" in event:
-
-            company = event.split("works at")[-1].strip()
-
-            self.semantic.add_fact(
-                user,
-                "company",
-                company
-            )
-
-        # City
-
-        elif "lives in" in event:
-
-            city = event.split("lives in")[-1].strip()
-
-            self.semantic.add_fact(
-                user,
-                "city",
-                city
-            )
-
-        # University
-
-        elif "studies at" in event:
-
-            university = event.split("studies at")[-1].strip()
-
-            self.semantic.add_fact(
-                user,
-                "university",
-                university
-            )
-
-    def consolidate_latest(self):
-
-        latest = self.episodic.latest(1)
-
-        if latest:
-
-            self.extract_fact(latest[0])
+        for episode in unconsolidated_episodes:
+            extracted_facts = self.extract_facts_from_episode(episode)
+            
+            for fact in extracted_facts:
+                existing_fact = self.semantic.find_by_key(fact["key"])
+                
+                if existing_fact:
+                    # حل التعارض والـ Versioning
+                    if existing_fact["value"] != fact["value"]:
+                        # إرسال الحقيقة القديمة للـ Archive/Versioning
+                        self.semantic.archive_fact(existing_fact, reason="Updated by new episode")
+                        
+                        # إضافة الحقيقة الجديدة بإصدار جديد
+                        self.semantic.upsert_fact(
+                            key=fact["key"],
+                            value=fact["value"],
+                            version=existing_fact["version"] + 1,
+                            updated_at=datetime.datetime.now().isoformat()
+                        )
+                else:
+                    # إضافة حقيقة جديدة
+                    self.semantic.upsert_fact(
+                        key=fact["key"],
+                        value=fact["value"],
+                        version=1,
+                        updated_at=datetime.datetime.now().isoformat()
+                    )
+            
+            self.episodic.mark_as_consolidated(episode["id"])

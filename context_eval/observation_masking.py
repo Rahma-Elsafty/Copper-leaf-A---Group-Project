@@ -4,27 +4,26 @@ from .tokenizer import count_tokens
 
 class ObservationMaskingStrategy(ContextStrategy):
 
-    def __init__(self, keep_last_tool_outputs=3):
-
+    def __init__(self, keep_last_tool_outputs: int = 3):
         self.keep_last_tool_outputs = keep_last_tool_outputs
-
         self.name = (
-            f"Observation masking (keep last {keep_last_tool_outputs} tool outputs)"
+            f"Observation masking "
+            f"(keep last {keep_last_tool_outputs} tool outputs)"
         )
 
-    def compress(self, turns, scratchpad):
+    def compress(
+        self,
+        turns: list[dict],
+        scratchpad: dict | None = None,
+    ) -> list[dict]:
 
         tool_indices = [
-
             i
-
             for i, turn in enumerate(turns)
-
             if turn.get("is_tool_output", False)
-
         ]
 
-        keep_tool_indices = set(
+        keep_indices = set(
             tool_indices[-self.keep_last_tool_outputs:]
         )
 
@@ -32,25 +31,21 @@ class ObservationMaskingStrategy(ContextStrategy):
 
         for i, turn in enumerate(turns):
 
+            new_turn = dict(turn)
+
             if (
                 turn.get("is_tool_output", False)
-
-                and
-
-                i not in keep_tool_indices
+                and i not in keep_indices
             ):
-
-                masked = dict(turn)
-
-                masked["content"] = (
-                    f"[Tool output masked - "
-                    f"{count_tokens(turn['content'])} tokens omitted]"
+                token_count = count_tokens(
+                    turn.get("content", "")
                 )
 
-                compressed.append(masked)
+                new_turn["content"] = (
+                    f"[Tool output masked - "
+                    f"{token_count} tokens omitted]"
+                )
 
-            else:
-
-                compressed.append(dict(turn))
+            compressed.append(new_turn)
 
         return compressed
