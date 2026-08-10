@@ -78,28 +78,45 @@ class DocumentVectorStore:
         self,
         query: str,
         k: int = 4,
+        filter: dict | None = None,
     ) -> list[Document]:
         """
-        Retrieve the most relevant documents for a query.
+        Retrieve relevant documents using vector similarity.
+    
+        Optional metadata filters are applied during retrieval.
         """
 
+        search_kwargs = {
+            "k": k,
+        }
+    
+        if filter:
+            search_kwargs["filter"] = filter
+    
         return self.vector_store.similarity_search(
             query,
-            k=k,
+            **search_kwargs,
         )
-
-    def get_retriever(self, k: int = 4):
+    def get_retriever(
+        self,
+        k: int = 4,
+        filter: dict | None = None,
+    ):
         """
-        Return a retriever compatible with Naive RAG
-        and Agentic RAG.
+        Return a retriever with optional metadata filtering.
         """
-
+    
+        search_kwargs = {
+            "k": k,
+        }
+    
+        if filter:
+            search_kwargs["filter"] = filter
+    
         return self.vector_store.as_retriever(
-            search_kwargs={
-                "k": k,
-            }
-        )
-
+            search_kwargs=search_kwargs
+    )    
+ 
     def count(self) -> int:
         """
         Return the number of stored document chunks.
