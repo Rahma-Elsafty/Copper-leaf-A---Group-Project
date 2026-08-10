@@ -909,75 +909,8 @@ vector_db/
 
 ---
 
-## 25. Demo Requirements
 
-The final demonstration should show the following behaviors.
-
-### Memory
-
-**Promote-or-Drop**
-
-Show an aging memory item reaching the routing layer:
-
-```text
-Memory item
-     ↓
-Promote-or-Drop
-     ↓
-PROMOTE / DROP
-     ↓
-Visible reasoning
-```
-
-**Consolidation**
-
-Show episodic memories being periodically consolidated into semantic memory.
-
-The demo should include:
-
-- a normal fact
-- an updated fact
-- a stale/expired fact
-- a real contradiction
-- the resulting resolved semantic fact
-- preservation of the previous version
-
-### Context Management
-
-Run all four strategies against the fixed long-context test suite and show the resulting comparison table.
-
-### Retrieval
-
-Ask the same question through:
-
-- Naive RAG
-- Hybrid Search
-- Agentic RAG
-
-and show their answers and evaluation results.
-
-### Self-RAG
-
-Show at least one successful verification and, ideally, one failed verification.
-
-Example:
-
-```text
-Retrieved documents
-       ↓
-Relevance check
-       ↓
-Supported?
-       ↓
-YES → answer
-NO  → reject / retrieve more
-```
-
-This demonstrates that the agent does not blindly trust retrieval results.
-
----
-
-## 26. Design Decisions
+## 25. Design Decisions
 
 The main production decisions are driven by measured results.
 
@@ -1008,7 +941,7 @@ Agentic RAG remains useful for queries that genuinely require multi-hop reasonin
 
 ---
 
-## 27. Comparison Summary
+## 26. Comparison Summary
 
 ### Context Management
 
@@ -1033,7 +966,7 @@ Agentic RAG remains useful for queries that genuinely require multi-hop reasonin
 
 ---
 
-## 28. Why These Components Exist
+## 27. Why These Components Exist
 
 Each component addresses a specific system problem rather than being added only because it is part of the assignment.
 
@@ -1060,7 +993,7 @@ Each component addresses a specific system problem rather than being added only 
 
 ---
 
-## 29. Safety and Grounding
+## 28. Safety and Grounding
 
 The system follows several grounding principles.
 
@@ -1087,7 +1020,7 @@ API keys, database credentials, and embedding credentials must remain outside Gi
 
 ---
 
-## 30. Final Outcome
+## 29. Final Outcome
 
 The Copperleaf system has been extended from an MCP-only agent into a system that combines:
 
