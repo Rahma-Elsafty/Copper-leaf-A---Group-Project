@@ -303,3 +303,25 @@ def list_rag_documents() -> list[dict]:
     with connect() as conn:
         rows = conn.execute("SELECT * FROM rag_documents ORDER BY created_at DESC").fetchall()
     return [dict(r) for r in rows]
+
+
+# ---------------------------------------------------------------------
+# Known agents — for the admin platform's "agents & tools" screen. An
+# agent becomes "known" the moment it EITHER has an explicit tool
+# permission row OR has ever started a graph run — this is deliberately
+# not a hardcoded list, since new state-graph agents should show up on
+# the admin screen the moment they run, with no separate registration
+# step to keep in sync.
+# ---------------------------------------------------------------------
+
+def list_known_agents() -> list[str]:
+    with connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT DISTINCT agent_name AS name FROM agent_tool_permissions
+            UNION
+            SELECT DISTINCT agent_name AS name FROM graph_runs WHERE agent_name IS NOT NULL
+            ORDER BY name
+            """
+        ).fetchall()
+    return [r["name"] for r in rows]

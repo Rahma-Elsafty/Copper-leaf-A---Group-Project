@@ -192,6 +192,36 @@ class StateGraph:
         store.update_run_status(run_id, "running", resume_node)
         self._run_node(resume_node, run_id, state)
 
+    def retry_from_ticket(self, run_id: str, node_name: str, event: dict | None = None) -> None:
+        """Resume a run that FAILED and opened a failure ticket (see
+        NodeFailure handling above), picking up from its last durable
+        checkpoint rather than restarting the run from the top. This is
+        the ticket/failure-recovery path's resume, and is intentionally a
+        different method from `advance_waiting_run`: a Wait is an expected
+        pause for an external reply; a ticket is an unplanned failure the
+        engine caught. Callers (the platform's ticket-resolve endpoint)
+        call this ONLY after a human has actually inspected the ticket and
+        resolved it via `state_graph.store.update_ticket_status(...,
+        "resolved", ...)` — this method itself does not touch the ticket
+        row, so "ticket marked resolved" and "run resumed" stay two
+        explicit, separately-callable actions rather than one hidden step.
+
+        `node_name` is normally the same node that raised NodeFailure
+        (the admin is retrying the thing that broke), but doesn't have to
+        be — an admin may resolve a ticket by routing the run to a
+        different node entirely (e.g. straight to a manual-override node)
+        if that's what the situation actually calls for.
+
+        `event` carries any corrected data the admin supplies while
+        resolving the ticket (e.g. a fixed argument that caused a
+        validation failure); it's merged into the checkpointed state
+        exactly like `advance_waiting_run` merges an external event.
+        """
+        cp = store.latest_checkpoint(run_id)
+        state = {**cp.state, **(event or {})}
+        store.update_run_status(run_id, "running", node_name)
+        self._run_node(node_name, run_id, state)
+
     def advance_waiting_run(self, run_id: str, resume_node: str, event: dict) -> None:
         """Called from an external event source: the platform's delivery/
         webhook endpoints, an admin's timeout sweep, or (in
