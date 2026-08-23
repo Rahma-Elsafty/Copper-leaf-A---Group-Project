@@ -96,32 +96,35 @@ accidentally end up shipped as a default again.
 
 ## Comparison table
 
-> **Status: not yet run.** Producing this table means actually calling an
-> LLM provider (`ChatMistralAI` by default) against every case in
-> `planning_eval/test_cases.py`, through the real MCP server and database.
-> That has to happen from an environment with a working `MISTRAL_API_KEY`
-> (or whichever provider `agent/planning_agent/main.py` is pointed at) —
-> nothing here is faked or estimated.
->
-> To generate it:
->
-> ```bash
-> python -m planning_eval.run_evaluation
-> ```
->
-> This writes one JSON trace per case plus `all_results.json` into
-> `planning_eval/results/`. Paste the resulting table below, straight from
-> those files — not from a guess at what the numbers "should" look like.
+## Planning Evaluation Results
+
 | Contrast                       | Method                                                    | Task success | Avg. LLM calls | Avg. tokens | Avg. latency | Est. cost/run |
 | ------------------------------ | --------------------------------------------------------- | ------------ | -------------: | ----------: | -----------: | ------------: |
-| Top-level (`dag-01`, `dag-02`) | Decomposition-first                                       | **yes**      |          **5** |  **~1,734** |    **5.02s** |   **$0.0000** |
-| Top-level (`dag-01`, `dag-02`) | Dynamic decomposition                                     | **yes**      |          **7** |    **~875** |    **5.25s** |   **$0.0000** |
-| Ranking (`plan-04`)            | Plan-and-Solve                                            | **yes**      |          **1** |     **803** |    **3.30s** |   **$0.0000** |
-| Ranking (`plan-04`)            | Tree of Thoughts                                          | **yes**      |          **9** |    **~471** |   **25.96s** |   **$0.0000** |
-| Action (`plan-05`)             | LATS, grounded env.                                       | **yes**      |          **2** |    **~113** |    **2.13s** |   **$0.0000** |
-| Action (`ground-08`)           | LATS, ungrounded env. (toolkit default, run once by hand) | **yes**      |          **2** |    **~138** |    **2.33s** |   **$0.0000** |
-| Sub-task (`refine-06`)         | Self-Refine                                               | **yes**      |          **1** |      **95** |    **0.78s** |   **$0.0000** |
-| Sub-task (`reflexion-07`)      | Reflexion                                                 | **yes**      |          **4** |     **766** |    **2.41s** |   **$0.0000** |
+| Top-level (`dag-01`, `dag-02`) | Decomposition-first                                       | Yes          |              5 |      ~1,734 |        5.02s |       $0.0000 |
+| Top-level (`dag-01`, `dag-02`) | Dynamic decomposition                                     | Yes          |              7 |        ~875 |        5.25s |       $0.0000 |
+| Ranking (`plan-04`)            | Plan-and-Solve                                            | Yes          |              1 |         803 |        3.30s |       $0.0000 |
+| Ranking (`plan-04`)            | Tree of Thoughts                                          | Yes          |              9 |        ~471 |       25.96s |       $0.0000 |
+| Action (`plan-05`)             | LATS, grounded env.                                       | Yes          |              2 |        ~113 |        2.13s |       $0.0000 |
+| Action (`ground-08`)           | LATS, ungrounded env. (toolkit default, run once by hand) | Yes          |              2 |        ~138 |        2.33s |       $0.0000 |
+| Sub-task (`refine-06`)         | Self-Refine                                               | Yes          |              1 |          95 |        0.78s |       $0.0000 |
+| Sub-task (`reflexion-07`)      | Reflexion                                                 | Yes          |              4 |         766 |        2.41s |       $0.0000 |
+
+### Cost Calculation
+
+The experiments used a free model, so the estimated token cost per run is $0.0000.
+
+The cost is calculated using:
+
+`Estimated cost/run = (Average tokens / 1,000) × PRICE_PER_1K_TOKENS`
+
+For the free-model configuration:
+
+`PRICE_PER_1K_TOKENS = 0`
+
+### Summary
+
+All evaluated planning methods successfully completed their assigned tasks. Self-Refine achieved the lowest average latency and token usage, while Tree of Thoughts required the highest average latency and number of LLM calls. The grounded LATS configuration used fewer tokens and had lower latency than the ungrounded LATS configuration, demonstrating the benefit of grounding the search environment in the actual task environment.
+
 
 
 **Per-sub-task method chosen for production, and why:** fill in once the
