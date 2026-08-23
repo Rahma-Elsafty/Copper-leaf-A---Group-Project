@@ -1096,3 +1096,790 @@ The system is therefore designed around the actual distinction between:
 - **What do our documents say?** → RAG
 - **What is the agent currently trying to do?** → Scratchpad
 - **Can the evidence actually support this answer?** → Self-RAG verification
+
+  # Copperleaf Kitchen — Stateful Agent Platform
+
+## Final Project
+
+Copperleaf Kitchen is a stateful multi-agent restaurant operations platform built around durable state graphs, MCP tools, human-in-the-loop control, failure recovery, checkpointing, RAG, and an administrative web platform.
+
+The system is designed for operational tasks that cannot be represented as a single request/response interaction. Instead, each workflow maintains persistent state, can pause for human decisions or external events, can fail and recover, and can continue from its latest durable checkpoint.
+
+---
+
+## 1. Project Overview
+
+The final system combines the existing Copperleaf Kitchen agent infrastructure with a new stateful workflow layer and an administrative/user platform.
+
+The system contains three main stateful workflows:
+
+1. **Supplier Onboarding**
+2. **Food Safety Incident Management**
+3. **Purchase Order Fulfillment**
+
+Each workflow is implemented as an explicit state graph.
+
+The graphs support:
+
+* branching
+* waiting
+* human approval
+* external events
+* failures
+* durable checkpoints
+* recovery
+* LLM-based reasoning techniques
+* MCP/database operations
+
+The project also provides a web platform for interacting with agents and administering:
+
+* agents
+* MCP tools
+* RAG documents
+* HITL tasks
+* failure tickets
+* state-graph runs
+
+---
+
+# 2. Architecture
+
+```text
+                         ┌─────────────────────────┐
+                         │       Web Platform       │
+                         │                         │
+                         │  User UI    Admin UI     │
+                         └────────────┬────────────┘
+                                      │
+                                      ▼
+                         ┌─────────────────────────┐
+                         │      Platform API       │
+                         │                         │
+                         │ runs / HITL / tickets   │
+                         │ agents / tools / RAG     │
+                         └────────────┬────────────┘
+                                      │
+                ┌─────────────────────┼─────────────────────┐
+                │                     │                     │
+                ▼                     ▼                     ▼
+        ┌───────────────┐     ┌───────────────┐     ┌───────────────┐
+        │   Supplier    │     │ Food Safety   │     │ Purchase      │
+        │   Onboarding  │     │ Incident      │     │ Order         │
+        │   Graph       │     │ Graph         │     │ Graph         │
+        └───────┬───────┘     └───────┬───────┘     └───────┬───────┘
+                │                     │                     │
+                └─────────────────────┼─────────────────────┘
+                                      ▼
+                         ┌─────────────────────────┐
+                         │   State Graph Engine    │
+                         │                         │
+                         │ checkpoints             │
+                         │ waits                   │
+                         │ HITL pauses             │
+                         │ failures                │
+                         │ recovery                │
+                         └────────────┬────────────┘
+                                      │
+                         ┌────────────┴────────────┐
+                         ▼                         ▼
+                ┌─────────────────┐       ┌─────────────────┐
+                │   MCP Server    │       │ Durable Store   │
+                │                 │       │                 │
+                │ database tools  │       │ SQLite          │
+                │ tool permissions│       │ checkpoints     │
+                └────────┬────────┘       │ HITL tasks      │
+                         │                │ failure tickets │
+                         ▼                └─────────────────┘
+                ┌─────────────────┐
+                │ Copperleaf DB   │
+                │                 │
+                │ suppliers       │
+                │ inventory       │
+                │ purchases       │
+                │ incidents       │
+                │ policies        │
+                └─────────────────┘
+```
+
+---
+
+# 3. Why These Problems Are Stateful
+
+## 3.1 Supplier Onboarding
+
+Supplier onboarding cannot be completed in one interaction because the workflow depends on multiple sequential conditions.
+
+Typical flow:
+
+```text
+START
+  │
+  ▼
+Collect supplier information
+  │
+  ▼
+Compliance / policy check
+  │
+  ▼
+Manager approval
+  │
+  ├──────── Reject ───────► FAILED
+  │
+  ▼
+Wait for signed agreement
+  │
+  ├──────── Timeout/failure ─────► FAILURE TICKET
+  │
+  ▼
+Verify supplier
+  │
+  ▼
+DONE
+```
+
+The graph needs persistent state because the manager decision and signed agreement may occur much later than the initial request.
+
+### Techniques
+
+* RAG
+* constrained ReAct
+
+RAG provides grounded access to relevant restaurant policies and supplier information.
+
+Constrained ReAct allows the agent to reason about the next operational action while restricting execution to permitted tools/actions.
+
+---
+
+# 4. Food Safety Incident Management
+
+Food-safety incidents require investigation, evidence gathering, policy consultation, and human confirmation.
+
+Example flow:
+
+```text
+START
+  │
+  ▼
+Record incident
+  │
+  ▼
+Retrieve relevant safety policies
+  │
+  ▼
+Investigate possible causes
+  │
+  ▼
+Determine corrective action
+  │
+  ▼
+Human safety review
+  │
+  ├──────── Reject ───────► INVESTIGATE AGAIN
+  │
+  ▼
+Close incident
+  │
+  ▼
+DONE
+```
+
+The workflow is stateful because investigation and approval can occur at different times and because a rejected decision can send the workflow back to an earlier state.
+
+### Techniques
+
+* RAG
+* Tree of Thoughts
+
+RAG grounds decisions in the restaurant's stored safety policies.
+
+Tree of Thoughts evaluates multiple possible investigation/corrective-action paths before selecting the preferred path.
+
+---
+
+# 5. Purchase Order Fulfillment
+
+Purchase-order fulfillment involves checking inventory, suppliers, budgets, approvals, and execution.
+
+Example flow:
+
+```text
+START
+  │
+  ▼
+Determine required purchase
+  │
+  ▼
+Decompose purchasing task
+  │
+  ▼
+Check suppliers / inventory
+  │
+  ▼
+Select supplier
+  │
+  ▼
+Create purchase order
+  │
+  ▼
+Approval required?
+  │
+  ├── YES ──► HITL APPROVAL
+  │              │
+  │              ├── REJECT ──► REVISE
+  │              │
+  │              └── APPROVE
+  │
+  ▼
+Fulfill order
+  │
+  ▼
+DONE
+```
+
+### Techniques
+
+* Task decomposition
+* constrained ReAct
+
+Task decomposition converts the purchasing objective into smaller operational steps.
+
+Constrained ReAct performs the required database/MCP actions while respecting the available tool constraints.
+
+---
+
+# 6. Durable Checkpointing
+
+The state graph engine persists workflow state after important transitions.
+
+A checkpoint contains the information required to reconstruct the current workflow state.
+
+Conceptually:
+
+```text
+Graph State
+    │
+    ▼
+Execute node
+    │
+    ├── success ──► persist checkpoint
+    │
+    ├── wait ─────► persist checkpoint + WAIT
+    │
+    ├── HITL ─────► persist checkpoint + HITL task
+    │
+    └── failure ──► persist checkpoint + failure ticket
+```
+
+The important property is that workflow progress does not exist only in process memory.
+
+If the process terminates, the persisted checkpoint remains available.
+
+---
+
+# 7. Crash Recovery
+
+The project includes a crash-recovery demonstration.
+
+The recovery sequence is:
+
+```text
+Process A
+   │
+   ▼
+Run workflow
+   │
+   ▼
+Persist checkpoint
+   │
+   ▼
+Process killed
+   X
+
+Process B
+   │
+   ▼
+Load same run ID
+   │
+   ▼
+Load persisted checkpoint
+   │
+   ▼
+Resume workflow
+   │
+   ▼
+Continue normally
+```
+
+This demonstrates that the workflow is durable across process restarts.
+
+Run the demonstration with:
+
+```bash
+python -m state_graph.demo_crash_recovery
+```
+
+---
+
+# 8. Human-in-the-Loop
+
+Some decisions should not be performed automatically.
+
+When a graph reaches a HITL node:
+
+```text
+Graph
+  │
+  ▼
+HITL condition
+  │
+  ▼
+Persist current state
+  │
+  ▼
+Create HITL task
+  │
+  ▼
+Admin reviews task
+  │
+  ├── APPROVE
+  │
+  └── REJECT
+        │
+        ▼
+Resume graph
+```
+
+The graph therefore does not lose its state while waiting for the administrator.
+
+---
+
+# 9. Failure Tickets
+
+Operational failures are represented as persistent failure tickets.
+
+The intended lifecycle is:
+
+```text
+OPEN
+  │
+  ▼
+INVESTIGATING
+  │
+  ▼
+RESOLVED
+  │
+  ▼
+RETRY / RESUME
+```
+
+A failure ticket is associated with the workflow state/checkpoint that produced it.
+
+Resolving the ticket can therefore resume the workflow from the persisted state rather than restarting the entire workflow.
+
+---
+
+# 10. MCP Integration
+
+Copperleaf operations are exposed through MCP tools.
+
+Examples include operations for:
+
+* suppliers
+* inventory
+* recipes
+* purchase orders
+* supplier verification
+* inventory counts
+
+The state graphs use these tools for real operational actions rather than directly bypassing the existing application layer.
+
+---
+
+# 11. Runtime MCP Tool Permissions
+
+Tool permissions are controlled from the administrative platform.
+
+The important behavior is runtime enforcement.
+
+When a tool is enabled:
+
+```text
+Admin
+  │
+  ▼
+Enable tool
+  │
+  ▼
+Permission store
+  │
+  ▼
+MCP runtime
+  │
+  ▼
+Tool appears and can be called
+```
+
+When a tool is disabled:
+
+```text
+Admin
+  │
+  ▼
+Disable tool
+  │
+  ▼
+Permission store
+  │
+  ▼
+MCP runtime
+  │
+  ├── tool no longer exposed
+  │
+  └── direct call is rejected
+```
+
+The permission check must therefore occur at the actual MCP boundary, not only in the UI.
+
+---
+
+# 12. RAG Administration
+
+The platform provides an administrative RAG document interface.
+
+Administrators can add/remove documents used by the agents.
+
+The intended behavior is:
+
+```text
+Admin adds document
+       │
+       ▼
+RAG storage/index
+       │
+       ▼
+Agent retrieval
+       │
+       ▼
+Response grounded in document
+```
+
+Removing a document removes it from the available retrieval knowledge.
+
+This allows the administrator to modify the agent's knowledge without changing the workflow implementation.
+
+---
+
+# 13. Platform
+
+The web platform provides two main surfaces.
+
+## User Surface
+
+Users can:
+
+* interact with agents
+* switch between agents
+* start/use stateful workflows
+* observe workflow state
+* receive workflow results
+
+## Admin Surface
+
+Administrators can manage:
+
+* HITL tasks
+* failure tickets
+* agents
+* MCP tools
+* RAG documents
+* state-graph runs
+
+---
+
+# 14. Project Structure
+
+```text
+Copper-leaf-A---Group-Project/
+│
+├── mcp_server/
+│   ├── server.py
+│   ├── database.py
+│   ├── validation.py
+│   └── ...
+│
+├── state_graph/
+│   ├── engine.py
+│   ├── store.py
+│   ├── techniques.py
+│   ├── demo_crash_recovery.py
+│   │
+│   └── graphs/
+│       ├── supplier_onboarding.py
+│       ├── food_safety_incident.py
+│       └── purchase_order_fulfillment.py
+│
+├── platform/
+│   ├── backend.py
+│   ├── requirements.txt
+│   └── static/
+│       ├── index.html
+│       ├── app.js
+│       └── ...
+│
+├── tests_state_graph/
+│   ├── test_supplier_onboarding_graph.py
+│   ├── test_food_safety_graph.py
+│   ├── test_purchase_order_graph.py
+│   └── ...
+│
+├── requirements.txt
+├── PLATFORM_AND_STATE_GRAPH.md
+├── DEMO_EVIDENCE.md
+└── README.md
+```
+
+---
+
+# 15. Installation
+
+## Windows
+
+```powershell
+git clone <repository-url>
+cd Copper-leaf-A---Group-Project
+
+python -m venv .venv
+.venv\Scripts\activate
+
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+pip install -r platform\requirements.txt
+```
+
+## Linux / macOS
+
+```bash
+git clone <repository-url>
+cd Copper-leaf-A---Group-Project
+
+python3 -m venv .venv
+source .venv/bin/activate
+
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+pip install -r platform/requirements.txt
+```
+
+---
+
+# 16. Environment Variables
+
+Create a `.env` file when an LLM provider is required.
+
+Do not commit the `.env` file.
+
+Example:
+
+```env
+COPPERLEAF_LLM_MODEL=your-model
+COPPERLEAF_LLM_BASE_URL=your-compatible-base-url
+OPENROUTER_API_KEY=your-key
+```
+
+Use the variables expected by the specific agent/LLM configuration in the repository.
+
+Never commit API keys, passwords, or credentials.
+
+---
+
+# 17. Run the Final Platform
+
+From the project root:
+
+```bash
+python platform/backend.py
+```
+
+Then open:
+
+```text
+http://localhost:5000
+```
+
+The Flask backend serves the platform frontend.
+
+---
+
+# 18. Run the State Graph Tests
+
+```bash
+pytest tests_state_graph -v
+```
+
+All three graph test suites should be executed before the final demonstration.
+
+---
+
+# 19. Crash Recovery Test
+
+Run:
+
+```bash
+python -m state_graph.demo_crash_recovery
+```
+
+The demonstration intentionally terminates one process and starts another process using the same persisted workflow state.
+
+The expected result is that the second process resumes from the saved checkpoint.
+
+---
+
+# 20. Recommended Final Demonstration
+
+## Demo 1 — HITL
+
+1. Start a stateful workflow.
+2. Let it reach a HITL node.
+3. Open the admin platform.
+4. Show the pending HITL task.
+5. Approve/reject the task.
+6. Show that the same workflow resumes.
+7. Show the resulting state.
+
+## Demo 2 — Failure Recovery
+
+1. Start a workflow.
+2. Trigger a controlled failure.
+3. Show the generated failure ticket.
+4. Show its persisted workflow/checkpoint.
+5. Move the ticket through investigation.
+6. Resolve it.
+7. Retry/resume the workflow.
+8. Show that execution continues from the checkpoint.
+
+## Demo 3 — Crash Recovery
+
+1. Start the crash-recovery demonstration.
+2. Show the workflow checkpoint.
+3. Kill the running process.
+4. Start the recovery process.
+5. Show the same run ID being restored.
+6. Show that the workflow continues from the checkpoint.
+
+---
+
+# 21. Runtime MCP Permission Demonstration
+
+For the final presentation:
+
+1. Open the admin tool-management page.
+2. Enable an MCP tool.
+3. Show that the tool is available to the agent/MCP runtime.
+4. Disable the same tool.
+5. Show that it disappears from the available tool set or is rejected at call time.
+6. Re-enable the tool.
+7. Show that it becomes available again.
+
+This verifies that the administrative setting affects the actual runtime rather than only changing the UI.
+
+---
+
+# 22. Testing Checklist
+
+Before submission:
+
+* [ ] All Python dependencies install successfully.
+* [ ] Platform starts successfully.
+* [ ] Frontend loads.
+* [ ] Agent switching works.
+* [ ] State-graph runs can be created.
+* [ ] Supplier onboarding works.
+* [ ] Food safety workflow works.
+* [ ] Purchase-order workflow works.
+* [ ] HITL task is persisted.
+* [ ] HITL approval resumes the graph.
+* [ ] Failure creates a persistent ticket.
+* [ ] Ticket can be investigated/resolved.
+* [ ] Resolved failure resumes from checkpoint.
+* [ ] Crash recovery works after process termination.
+* [ ] MCP tools execute correctly.
+* [ ] Disabled MCP tools cannot be called.
+* [ ] RAG document addition affects retrieval.
+* [ ] RAG document removal affects retrieval.
+* [ ] `.env` and credentials are not committed.
+* [ ] README matches the implementation.
+* [ ] Demo evidence is recorded.
+
+---
+
+# 23. Final Project Validation
+
+The final system should be evaluated as one integrated platform rather than as isolated scripts.
+
+The key validation questions are:
+
+### Stateful workflows
+
+Can each workflow pause, persist, resume, branch, and recover?
+
+### Checkpointing
+
+Does the workflow survive process termination?
+
+### HITL
+
+Can a human decision pause and later resume a workflow?
+
+### Failure recovery
+
+Can an operational failure become a ticket and resume from persisted state?
+
+### MCP
+
+Do the workflows use the actual MCP operational tools?
+
+### Runtime permissions
+
+Does disabling a tool actually prevent the runtime from using it?
+
+### RAG
+
+Do administrative document changes affect agent retrieval?
+
+### Platform
+
+Can a user operate agents and can an administrator control the system?
+
+---
+
+# 24. Final Submission Checklist
+
+Before submitting the repository:
+
+```text
+[ ] README updated
+[ ] Three state graphs implemented
+[ ] Two LLM techniques per graph
+[ ] Durable checkpointing verified
+[ ] HITL verified
+[ ] Failure ticket recovery verified
+[ ] Crash recovery verified
+[ ] MCP runtime permissions verified
+[ ] RAG administration verified
+[ ] User agent switching verified
+[ ] Admin platform verified
+[ ] Automated tests pass
+[ ] Demo evidence recorded
+[ ] GitHub issues created
+[ ] Issues linked to implementation PRs
+[ ] No secrets committed
+```
+
+---
+
+## Conclusion
+
+Copperleaf Kitchen demonstrates a stateful multi-agent architecture in which operational workflows are represented as durable state graphs rather than one-shot LLM calls.
+
+The combination of MCP tools, RAG, multiple reasoning/decomposition techniques, human approval, persistent failure tickets, durable checkpoints, crash recovery, and administrative controls provides the foundation for reliable restaurant operations automation.
+
