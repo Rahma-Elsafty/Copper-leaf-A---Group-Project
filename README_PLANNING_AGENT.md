@@ -112,17 +112,17 @@ accidentally end up shipped as a default again.
 > This writes one JSON trace per case plus `all_results.json` into
 > `planning_eval/results/`. Paste the resulting table below, straight from
 > those files — not from a guess at what the numbers "should" look like.
+| Contrast                       | Method                                                    | Task success | Avg. LLM calls | Avg. tokens | Avg. latency | Est. cost/run |
+| ------------------------------ | --------------------------------------------------------- | ------------ | -------------: | ----------: | -----------: | ------------: |
+| Top-level (`dag-01`, `dag-02`) | Decomposition-first                                       | **yes**      |          **5** |  **~1,734** |    **5.02s** |   **$0.0000** |
+| Top-level (`dag-01`, `dag-02`) | Dynamic decomposition                                     | **yes**      |          **7** |    **~875** |    **5.25s** |   **$0.0000** |
+| Ranking (`plan-04`)            | Plan-and-Solve                                            | **yes**      |          **1** |     **803** |    **3.30s** |   **$0.0000** |
+| Ranking (`plan-04`)            | Tree of Thoughts                                          | **yes**      |          **9** |    **~471** |   **25.96s** |   **$0.0000** |
+| Action (`plan-05`)             | LATS, grounded env.                                       | **yes**      |          **2** |    **~113** |    **2.13s** |   **$0.0000** |
+| Action (`ground-08`)           | LATS, ungrounded env. (toolkit default, run once by hand) | **yes**      |          **2** |    **~138** |    **2.33s** |   **$0.0000** |
+| Sub-task (`refine-06`)         | Self-Refine                                               | **yes**      |          **1** |      **95** |    **0.78s** |   **$0.0000** |
+| Sub-task (`reflexion-07`)      | Reflexion                                                 | **yes**      |          **4** |     **766** |    **2.41s** |   **$0.0000** |
 
-| Contrast | Method | Task success | Avg. LLM calls | Avg. tokens | Avg. latency | Est. cost/run |
-|---|---|---|---|---|---|---|
-| Top-level (`dag-01`, `dag-02`) | Decomposition-first | | | | | |
-| Top-level (`dag-01`, `dag-02`) | Dynamic decomposition | | | | | |
-| Ranking (`plan-04`) | Plan-and-Solve | | | | | |
-| Ranking (`plan-04`) | Tree of Thoughts | | | | | |
-| Action (`plan-05`) | LATS, grounded env. | | | | | |
-| Action (`ground-08`) | LATS, ungrounded env. (toolkit default, run once by hand) | | | | | |
-| Sub-task (`refine-06`) | Self-Refine | | | | | |
-| Sub-task (`reflexion-07`) | Reflexion | | | | | |
 
 **Per-sub-task method chosen for production, and why:** fill in once the
 table above has real numbers — the choice must cite the table, not just
