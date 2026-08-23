@@ -94,6 +94,40 @@ original random `Environment` once against the same case) — deliberately
 not wired into `run_evaluation.py` so the random evaluator can't
 accidentally end up shipped as a default again.
 
+## Comparison table
+
+> **Status: not yet run.** Producing this table means actually calling an
+> LLM provider (`ChatMistralAI` by default) against every case in
+> `planning_eval/test_cases.py`, through the real MCP server and database.
+> That has to happen from an environment with a working `MISTRAL_API_KEY`
+> (or whichever provider `agent/planning_agent/main.py` is pointed at) —
+> nothing here is faked or estimated.
+>
+> To generate it:
+>
+> ```bash
+> python -m planning_eval.run_evaluation
+> ```
+>
+> This writes one JSON trace per case plus `all_results.json` into
+> `planning_eval/results/`. Paste the resulting table below, straight from
+> those files — not from a guess at what the numbers "should" look like.
+
+| Contrast | Method | Task success | Avg. LLM calls | Avg. tokens | Avg. latency | Est. cost/run |
+|---|---|---|---|---|---|---|
+| Top-level (`dag-01`, `dag-02`) | Decomposition-first | | | | | |
+| Top-level (`dag-01`, `dag-02`) | Dynamic decomposition | | | | | |
+| Ranking (`plan-04`) | Plan-and-Solve | | | | | |
+| Ranking (`plan-04`) | Tree of Thoughts | | | | | |
+| Action (`plan-05`) | LATS, grounded env. | | | | | |
+| Action (`ground-08`) | LATS, ungrounded env. (toolkit default, run once by hand) | | | | | |
+| Sub-task (`refine-06`) | Self-Refine | | | | | |
+| Sub-task (`reflexion-07`) | Reflexion | | | | | |
+
+**Per-sub-task method chosen for production, and why:** fill in once the
+table above has real numbers — the choice must cite the table, not just
+repeat the reasoning in the "Why PS vs. ToT vs. LATS" section above.
+
 ## Demo checklist (for the required transcript/recording)
 
 - [ ] `dag-02-mid-plan-budget-surprise`: show decomposition-first executing
