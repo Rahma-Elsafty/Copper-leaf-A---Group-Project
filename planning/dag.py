@@ -121,3 +121,26 @@ class Plan(BaseModel):
 
     def terminal_tasks(self) -> list[str]:
         return [node for node, degree in self.graph.out_degree if degree == 0]
+
+
+class Thought(BaseModel):
+    """Shared by planning/tree_of_thoughts.py ("tot" sub-tasks)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    state: str
+    score: float = Field(ge=0.0, le=1.0)
+    rationale: str = ""
+
+
+class EnvironmentFeedback(BaseModel):
+    """A grounded signal produced OUTSIDE the language model. Shared by
+    planning/lats.py ("lats" sub-tasks) and planning/reflexion.py. The real
+    implementation lives in planning/environment.py (Person 3) — it must
+    call the actual MCP server, never a random number."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    success: bool
+    score: float = Field(ge=0.0, le=1.0)
+    details: list[str] = Field(default_factory=list)

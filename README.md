@@ -1,5 +1,10 @@
 # Memory & RAG Lab — Giving the Copperleaf Agent Memory and Grounded Knowledge
 
+> **This README covers the Memory & RAG agent only.** For the separate
+> Decomposition & Planning agent (a different agent, reusing the same
+> `mcp_server/` and `db/`, never touching this one's code path), see
+> [`README_PLANNING_AGENT.md`](README_PLANNING_AGENT.md).
+
 ## Overview
 
 This project extends the existing **Copperleaf MCP system** with two capabilities that were missing from the original agent:
@@ -777,58 +782,88 @@ This demonstrates that memory, RAG, and MCP are components of the same agent wor
 
 ## 22. Repository Structure
 
+This repo now hosts **two separate agents** that both extend the same
+`mcp_server/` and `db/`: the Memory/RAG agent documented in this file, and
+the Decomposition & Planning agent documented in
+[`README_PLANNING_AGENT.md`](README_PLANNING_AGENT.md). Neither agent's
+code path touches the other's.
+
 ```text
 project/
 │
 ├── agent/
-│   └── client.py
+│   ├── client.py                  # Memory/RAG agent (CopperleafAgent)
+│   └── planning_agent/
+│       └── main.py                # Planning agent entry point — separate agent, separate path
 │
-├── mcp_server/
+├── mcp_server/                    # shared by both agents
 │   ├── server.py
+│   ├── database.py
+│   ├── validation.py
+│   ├── auth.py
+│   ├── notifications.py
 │   ├── tools_read.py
 │   ├── tools_write.py
 │   ├── resources.py
 │   └── prompts.py
 │
-├── db/
-│   └── ...
+├── db/                            # shared by both agents
+│   ├── schema.sql
+│   ├── seed.sql
+│   ├── init_db.py
+│   └── erd.mmd
 │
-├── memory/
-│   ├── short_term.py
-│   ├── scratchpad.py
-│   ├── episodic.py
-│   ├── semantic.py
-│   ├── router.py
+├── memory/                        # Memory/RAG agent only
+│   ├── short_term_memory.py
+│   ├── scratchpad_manager.py
+│   ├── episodic_memory.py
+│   ├── semantic_memory.py
+│   ├── routing.py
 │   └── consolidation.py
 │
-├── context_eval/
-│   ├── strategies/
-│   ├── test_suite/
+├── context_eval/                  # Memory/RAG agent only
 │   ├── evaluate.py
 │   └── ...
 │
-├── rag/
+├── rag/                           # Memory/RAG agent only
 │   ├── loader.py
 │   ├── chunker.py
 │   ├── embedder.py
 │   ├── vector_store.py
 │   ├── Naive_Rag.py
 │   ├── hybrid_search.py
-│   ├── agentic_rag.py
-│   └── self_rag.py
+│   ├── Agentic_Rag.py
+│   ├── Graph_Rag.py
+│   └── Self_Rag.py
 │
-├── retrieval_eval/
+├── retrieval_eval/                # Memory/RAG agent only
 │   ├── questions.json
 │   ├── evaluate.py
-│   ├── retrieval_results.csv
 │   └── retrieval_summary.json
 │
-├── vector_db/
-│   └── ...
+├── planning/                      # Planning agent only — forked/extended
+│   ├── dag.py                     #   from github.com/AmrSheta22/task_decomposition_and_planning
+│   ├── decomposition.py
+│   ├── dynamic_decomposition.py
+│   ├── plan_and_solve.py
+│   ├── tree_of_thoughts.py
+│   ├── lats.py
+│   ├── router.py
+│   ├── self_refine.py
+│   ├── reflexion.py
+│   └── environment.py             # grounded EnvironmentFeedback (real MCP calls, not random)
 │
-├── .env
+├── planning_eval/                 # Planning agent only
+│   ├── test_cases.py
+│   ├── run_evaluation.py
+│   └── results/                   # JSON traces per run, written by run_evaluation.py
+│
+├── vector_db/                     # generated, git-ignored
+├── .env                           # generated, git-ignored — never commit this
 ├── .gitignore
-└── README.md
+├── requirements.txt
+├── README.md                      # this file — Memory/RAG agent
+└── README_PLANNING_AGENT.md       # Decomposition & Planning agent
 ```
 
 ---

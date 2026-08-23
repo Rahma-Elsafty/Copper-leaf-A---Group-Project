@@ -1,30 +1,38 @@
 """
 planning/ — Decomposition & Planning agent implementation layer for the
-Copperleaf Kitchen restocking agent.
+Copperleaf Kitchen restocking agent. Complete: all 4 concerns wired.
 Forked from github.com/AmrSheta22/task_decomposition_and_planning.
 
-Built by 4 people against the shared contracts defined here:
-  - Task / Plan / TaskKind             -> planning/dag.py
-  - MCPClient / TaskExecutor (async)   -> planning/decomposition.py
+Ownership map (for the demo transcript / commit history):
+  Person 1: dag.py, decomposition.py, dynamic_decomposition.py
+  Person 2: plan_and_solve.py, tree_of_thoughts.py, lats.py, router.py
+  Person 3: self_refine.py, reflexion.py, environment.py
+  Person 4: planning_eval/ (separate top-level package, not part of this one)
 
-Ownership:
-  Person 1 (this file's current exports): dag.py, decomposition.py, dynamic_decomposition.py
-  Person 2 (adds): plan_and_solve.py, tree_of_thoughts.py, lats.py, router.py
-  Person 3 (adds): self_refine.py, reflexion.py, environment.py
-  Person 4:        planning_eval/ (separate package — test suite, run_evaluation.py, results/)
+Wiring note: `MCPClient` matches `CopperleafAgent.call_mcp_tool`
+(agent/memory_rag_agent/client.py) exactly, so the planning agent can share
+the memory/RAG agent's live `ClientSession` instead of opening a second MCP
+connection. No LLM provider is hardcoded anywhere in this package — any
+`langchain_core.BaseChatModel` works, chosen at the call site
+(agent/planning_agent/main.py).
 
-Wiring note: `MCPClient` is deliberately shaped to match
-`CopperleafAgent.call_mcp_tool` (agent/memory_rag_agent/client.py) exactly,
-so whoever builds agent/planning_agent/ can hand this package the SAME live
-`ClientSession` the memory/RAG agent already opens — no second MCP
-connection, no LLM provider hardcoded here (any langchain_core.BaseChatModel
-works, chosen at the call site).
+Typical wiring, once everything below is imported (see
+agent/planning_agent/main.py for the full runnable version):
 
-As Person 2 and Person 3 land their modules, add their public names to the
-import list and __all__ below (mirrors the reference toolkit's own
-algorithms/__init__.py pattern).
+    environment = RestockEnvironment(mcp_client, requested_by=2)
+    router = Router(llm, environment)
+
+    # decomposition-first
+    plan = decompose_goal(goal, llm, context_facts)
+    outputs = await execute_plan(plan, mcp_client, executor=router.route)
+
+    # dynamic / interleaved
+    history = await dynamic_decomposition(goal, llm, mcp_client, context_facts, executor=router.route)
+
+    # whole-run retry across trials (only when a single dynamic run isn't enough)
+    result = await reflexion(goal, llm, mcp_client, context_facts, executor=router.route)
 """
-from .dag import Plan, Task, TaskKind
+from .dag import EnvironmentFeedback, Plan, Task, TaskKind, Thought
 from .decomposition import (
     DEFAULT_TOOL_CATALOG,
     MCPClient,
@@ -35,17 +43,39 @@ from .decomposition import (
     stub_executor,
 )
 from .dynamic_decomposition import dynamic_decomposition
+from .environment import RestockEnvironment
+from .lats import LATSResult, PurchaseOrderCandidate, flatten_lats_tree, lats
+from .plan_and_solve import plan_and_solve
+from .reflexion import ReflexionResult, reflexion
+from .router import Router
+from .self_refine import ReflectionResult, deterministic_checks, reflect_and_refine
+from .tree_of_thoughts import tree_of_thoughts
 
 __all__ = [
     "DEFAULT_TOOL_CATALOG",
+    "EnvironmentFeedback",
+    "LATSResult",
     "MCPClient",
     "Plan",
+    "PurchaseOrderCandidate",
+    "ReflectionResult",
+    "ReflexionResult",
+    "RestockEnvironment",
+    "Router",
     "Task",
     "TaskExecutor",
     "TaskKind",
+    "Thought",
     "decompose_goal",
+    "deterministic_checks",
     "dynamic_decomposition",
     "execute_plan",
     "final_output",
+    "flatten_lats_tree",
+    "lats",
+    "plan_and_solve",
+    "reflect_and_refine",
+    "reflexion",
     "stub_executor",
+    "tree_of_thoughts",
 ]
