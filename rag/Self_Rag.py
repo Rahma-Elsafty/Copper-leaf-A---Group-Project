@@ -1,15 +1,98 @@
+from langchain_openai import ChatOpenAI
+
+
 class SelfRAGVerifier:
-    def __init__(self, llm_client):
-        self.llm = llm_client
+    """
+    Self-RAG verification layer.
 
-    def verify_relevance(self, query, retrieved_chunks):
-        """[IS_RELEVANT] Check"""
-        prompt = f"Is the following context relevant to answer '{query}'? Answer YES or NO.\nContext: {retrieved_chunks}"
-        res = self.llm.generate(prompt)
-        return "YES" in res.upper()
+    Checks:
+    1. Retrieval relevance  -> [IS_RELEVANT]
+    2. Answer groundedness  -> [IS_SUPPORTED]
+    """
 
-    def verify_groundedness(self, generated_answer, retrieved_chunks):
-        """[IS_SUPPORTED] Check"""
-        prompt = f"Is the answer '{generated_answer}' fully supported by the text below? Answer YES or NO.\nText: {retrieved_chunks}"
-        res = self.llm.generate(prompt)
-        return "YES" in res.upper()
+    def __init__(self, llm: ChatOpenAI):
+        self.llm = llm
+
+    def verify_relevance(
+        self,
+        query: str,
+        retrieved_chunks: str,
+    ) -> bool:
+        """
+        [IS_RELEVANT]
+
+        Checks whether the retrieved context is relevant
+        to the user's query.
+        """
+
+        prompt = f"""
+You are a Self-RAG relevance verifier.
+
+Determine whether the retrieved context contains
+information that is relevant to answering the question.
+
+Question:
+{query}
+
+Retrieved context:
+{retrieved_chunks}
+
+Answer ONLY with:
+YES
+or
+NO
+"""
+
+        response = self.llm.invoke(prompt)
+
+        result = response.content.strip().upper()
+
+        relevant = result.startswith("YES")
+
+        print(
+            f"[Self-RAG] Retrieval relevant: {relevant}"
+        )
+
+        return relevant
+
+    def verify_groundedness(
+        self,
+        generated_answer: str,
+        retrieved_chunks: str,
+    ) -> bool:
+        """
+        [IS_SUPPORTED]
+
+        Checks whether the generated answer is supported
+        by the retrieved context.
+        """
+
+        prompt = f"""
+You are a Self-RAG groundedness verifier.
+
+Determine whether the answer is fully supported
+by the provided context.
+
+Answer:
+{generated_answer}
+
+Retrieved context:
+{retrieved_chunks}
+
+Answer ONLY with:
+YES
+or
+NO
+"""
+
+        response = self.llm.invoke(prompt)
+
+        result = response.content.strip().upper()
+
+        supported = result.startswith("YES")
+
+        print(
+            f"[Self-RAG] Answer grounded: {supported}"
+        )
+
+        return supported

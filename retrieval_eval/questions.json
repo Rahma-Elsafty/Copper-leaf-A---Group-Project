@@ -1,1 +1,134 @@
 
+[
+  {
+    "id": "Q01",
+    "category": "general",
+    "difficulty": "hard",
+    "question": "A customer has a severe shellfish allergy and wants a filling main dish. Which listed dishes are explicitly ruled out, and which listed dish is explicitly safe based only on the menu?",
+    "expected_keywords": [
+      "shellfish",
+      "allergen"
+    ]
+  },
+  {
+    "id": "Q02",
+    "category": "general",
+    "difficulty": "hard",
+    "question": "A customer avoids both dairy and gluten. Identify every listed menu item containing either allergen, and state whether the documents explicitly identify any item as safe for both restrictions.",
+    "expected_keywords": [
+      "dairy",
+      "gluten",
+      "allergen"
+    ]
+  },
+  {
+    "id": "Q03",
+    "category": "general",
+    "difficulty": "hard",
+    "question": "What does Copper Leaf's external-facts document say about accommodating significant food allergies and special dietary meals? Include the requirement to communicate the request in advance.",
+    "expected_keywords": [
+      "Customer Service",
+      "General Policies",
+      "advance"
+    ]
+  },
+  {
+    "id": "Q04",
+    "category": "exact_identifier",
+    "difficulty": "hard",
+    "question": "Find the exact menu entry for 'Peanut Noodle Bowl'. Return its exact listed price, ingredients, and every explicitly stated allergen.",
+    "expected_keywords": [
+      "Peanut Noodle Bowl",
+      "peanut"
+    ]
+  },
+  {
+    "id": "Q05",
+    "category": "exact_identifier",
+    "difficulty": "hard",
+    "question": "Find the exact menu entry for 'Shrimp Risotto'. Return its price, ingredients, and allergens. Do not infer any allergen not explicitly stated.",
+    "expected_keywords": [
+      "Shrimp Risotto",
+      "shrimp"
+    ]
+  },
+  {
+    "id": "Q06",
+    "category": "exact_identifier",
+    "difficulty": "hard",
+    "question": "The identifier 'CUST-1042' appears in the available context. What exact fact is associated with it? If the knowledge documents do not establish its meaning, explicitly say so rather than guessing.",
+    "expected_keywords": [
+      "CUST-1042"
+    ]
+  },
+  {
+    "id": "Q07",
+    "category": "multi_part",
+    "difficulty": "very_hard",
+    "question": "A customer has a severe shellfish allergy, avoids dairy, wants a filling meal, and plans to visit Friday evening. Determine: (1) which dishes are ruled out by explicit allergens, (2) whether a clearly safe filling dish is established, and (3) what reservation guidance applies Friday evening. Separate established facts from unknowns.",
+    "expected_keywords": [
+      "shellfish",
+      "dairy",
+      "Reservations",
+      "Friday"
+    ]
+  },
+  {
+    "id": "Q08",
+    "category": "multi_part",
+    "difficulty": "very_hard",
+    "question": "A customer wants takeaway, has a dietary restriction, and asks whether a particular menu item can be guaranteed to remain available later today. What do the documents say about takeaway, dietary communication, and changing menu availability?",
+    "expected_keywords": [
+      "takeaway",
+      "dietary",
+      "availability"
+    ]
+  },
+  {
+    "id": "Q09",
+    "category": "multi_part",
+    "difficulty": "very_hard",
+    "question": "A customer wants a vegan dish with no gluten and will decide only after checking the current seasonal menu. Does the knowledge base identify a specific dish satisfying all conditions, or only general vegan, dietary, and seasonal policies? Explain what cannot be concluded.",
+    "expected_keywords": [
+      "vegan",
+      "gluten",
+      "seasonal"
+    ]
+  },
+  {
+    "id": "Q10",
+    "category": "multi_part",
+    "difficulty": "very_hard",
+    "question": "Compare the structured menu's allergen information with the broader external-facts document. What allergen information is explicitly available, what should be confirmed with staff, and why should a previously listed dish not automatically be assumed to remain available?",
+    "expected_keywords": [
+      "allergen",
+      "staff",
+      "available"
+    ]
+  },
+  {
+    "id": "Q11",
+    "category": "multi_part",
+    "difficulty": "very_hard",
+    "question": "A customer wants a large-group reservation on Saturday evening and has a special dietary requirement. Identify the relevant instructions for peak reservations, large groups, dietary communication, and whether accommodation is guaranteed.",
+    "expected_keywords": [
+      "Reservations",
+      "large",
+      "dietary",
+      "Saturday"
+    ]
+  },
+  {
+    "id": "Q12",
+    "category": "multi_part",
+    "difficulty": "very_hard",
+    "question": "A customer has a severe shellfish allergy, wants vegetarian or vegan food, may order takeaway, and needs it on a busy Friday evening. What can Copper Leaf confidently establish from the documents, and what must be confirmed with staff before ordering? Separate confirmed facts from items requiring confirmation.",
+    "expected_keywords": [
+      "shellfish",
+      "vegetarian",
+      "vegan",
+      "takeaway",
+      "staff"
+    ]
+  }
+]
